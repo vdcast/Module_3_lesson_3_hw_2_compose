@@ -5,6 +5,7 @@ import android.graphics.drawable.Icon
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,10 +15,15 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardColors
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
@@ -46,12 +52,16 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.draw.paint
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.sp
+import com.example.module_3_lesson_3_hw_2_compose.ui.theme.Mint10
 import java.time.format.TextStyle
+import androidx.compose.foundation.Image
+import androidx.compose.runtime.collectAsState
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -74,28 +84,54 @@ val LocalPrefs = compositionLocalOf<SharedPrefs> { error(" No SharedPrefs provid
 fun MyApp() {
     val prefs = SharedPrefs(LocalContext.current)
     CompositionLocalProvider(LocalPrefs provides prefs) {
+
         val navController = rememberNavController()
+        val skin = prefs.skinFlow.collectAsState()
 
-        NavHost(
-            navController = navController,
-            startDestination = ScreenRoutes.ScreenMain.route
+        Box(
+            modifier = Modifier
+                .fillMaxSize(),
+            contentAlignment = Alignment.Center
         ) {
-            composable(ScreenRoutes.ScreenMain.route) {
-                ScreenMain(
-                    navigateToSettings = {
-                        navController.navigate(ScreenRoutes.ScreenSettings.route)
-                    }
-                )
-            }
-            composable(ScreenRoutes.ScreenSettings.route) {
-                ScreenSettings(
-                    navigateBack = {
-                        navController.popBackStack()
-                    }
-                )
-            }
 
+            Image(
+                painter = painterResource(
+                    id = when (skin.value) {
+                        "Light" -> R.drawable.light
+                        "Dark" -> R.drawable.dark_mahadev
+                        "Ocean" -> R.drawable.ocean
+                        "Moto" -> R.drawable.motocross
+                        "Nature" -> R.drawable.nature
+                        else -> R.drawable.light
+                    }
+                ),
+                contentDescription = "Image background Main Screen",
+                contentScale = ContentScale.FillBounds
+            )
+
+            NavHost(
+                navController = navController,
+                startDestination = ScreenRoutes.ScreenMain.route
+            ) {
+                composable(ScreenRoutes.ScreenMain.route) {
+                    ScreenMain(
+                        navigateToSettings = {
+                            navController.navigate(ScreenRoutes.ScreenSettings.route)
+                        }
+                    )
+                }
+                composable(ScreenRoutes.ScreenSettings.route) {
+                    ScreenSettings(
+                        navigateBack = {
+                            navController.popBackStack()
+                        }
+                    )
+                }
+
+            }
         }
+
+
     }
 }
 
@@ -106,47 +142,48 @@ fun ScreenMain(
     val context = LocalContext.current
     val prefs = LocalPrefs.current
 
-    Column(
+    Box(
         modifier = Modifier
-            .fillMaxSize()
-            .paint(
-                painterResource(
-                    id = when (prefs.getSkin()) {
-                        "Light" -> R.drawable.light
-                        "Dark" -> R.drawable.dark_red_laser
-                        "Ocean" -> R.drawable.ocean
-                        "Moto" -> R.drawable.motocross
-                        "Nature" -> R.drawable.nature
-                        else -> R.drawable.light
-                    }
-                ),
-                contentScale = ContentScale.FillBounds
-            ),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+            .fillMaxSize(),
+        contentAlignment = Alignment.Center
     ) {
-        Text(
-            text = "Screen Main",
-            fontSize = 20.sp
-        )
-        Spacer(modifier = Modifier.height(dimensionResource(R.dimen.padding_medium)))
-        Button(
-            onClick = {
-                context.startService(Intent(context, AudioService::class.java))
-            }
+
+        Card(
+            modifier = Modifier,
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(Mint10)
         ) {
-            Text(text = stringResource(id = R.string.startService))
-        }
-        Button(
-            onClick = {
-                context.stopService(Intent(context, AudioService::class.java))
+            Column(
+                modifier = Modifier
+                    .wrapContentSize()
+                    .padding(all = 32.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                Text(
+                    text = "Screen Main",
+                    fontSize = 20.sp
+                )
+                Spacer(modifier = Modifier.height(dimensionResource(R.dimen.padding_medium)))
+                Button(
+                    onClick = {
+                        context.startService(Intent(context, AudioService::class.java))
+                    }
+                ) {
+                    Text(text = stringResource(id = R.string.startService))
+                }
+                Button(
+                    onClick = {
+                        context.stopService(Intent(context, AudioService::class.java))
+                    }
+                ) {
+                    Text(text = stringResource(id = R.string.stopService))
+                }
+                Spacer(modifier = Modifier.height(dimensionResource(R.dimen.padding_small)))
+                Button(onClick = navigateToSettings) {
+                    Text(text = stringResource(id = R.string.settings))
+                }
             }
-        ) {
-            Text(text = stringResource(id = R.string.stopService))
-        }
-        Spacer(modifier = Modifier.height(dimensionResource(R.dimen.padding_small)))
-        Button(onClick = navigateToSettings) {
-            Text(text = stringResource(id = R.string.settings))
         }
     }
 
@@ -161,82 +198,85 @@ fun ScreenSettings(
     var selectedSkin by rememberSaveable() { mutableStateOf(prefs.getSkin()) }
     val (isCheckedRepeat, setCheckedRepeat) = remember { mutableStateOf(prefs.getRepeat()) }
 
-    Column(
+    Box(
         modifier = Modifier
-            .fillMaxSize()
-            .paint(
-                painterResource(
-                    id = when (prefs.getSkin()) {
-                        "Light" -> R.drawable.light
-                        "Dark" -> R.drawable.dark_red_laser
-                        "Ocean" -> R.drawable.ocean
-                        "Moto" -> R.drawable.motocross
-                        "Nature" -> R.drawable.nature
-                        else -> R.drawable.light
-                    }
-                ),
-                contentScale = ContentScale.FillBounds
-            ),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+            .fillMaxSize(),
+        contentAlignment = Alignment.Center
     ) {
-        Text(
-            text = stringResource(id = R.string.settings),
-            fontSize = 20.sp
-        )
-        Spacer(modifier = Modifier.height(dimensionResource(R.dimen.padding_medium)))
 
-        Row(
-            verticalAlignment = Alignment.CenterVertically
+        Card(
+            modifier = Modifier,
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(Mint10)
         ) {
-            Text(text = "Choose skin of main screen")
-            Spacer(modifier = Modifier.width(dimensionResource(R.dimen.padding_medium)))
-            Spinner(
-                modifier = Modifier.width(dimensionResource(id = R.dimen.button_width)),
-                itemList = skins,
-                selectedItem = selectedSkin,
-                onItemSelected = {
-                    selectedSkin = it
-                    prefs.setSkin(selectedSkin)
+            Column(
+                modifier = Modifier
+                    .wrapContentSize()
+                    .padding(all = 16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                Text(
+                    text = stringResource(id = R.string.settings),
+                    fontSize = 20.sp
+                )
+                Spacer(modifier = Modifier.height(dimensionResource(R.dimen.padding_medium)))
+
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(text = "Choose skin of main screen")
+                    Spacer(modifier = Modifier.width(dimensionResource(R.dimen.padding_medium)))
+                    Spinner(
+                        modifier = Modifier.width(dimensionResource(id = R.dimen.button_width)),
+                        itemList = skins,
+                        selectedItem = selectedSkin,
+                        onItemSelected = {
+                            selectedSkin = it
+                            prefs.setSkin(selectedSkin)
+                        }
+                    )
                 }
-            )
-        }
 
-        Spacer(modifier = Modifier.height(dimensionResource(R.dimen.padding_small)))
-        
-        Row() {
-            Text(text = "Selected skin:")
-            Spacer(modifier = Modifier.width(dimensionResource(R.dimen.padding_small)))
-            Text(text = prefs.getSkin())
-        }
+                Spacer(modifier = Modifier.height(dimensionResource(R.dimen.padding_small)))
 
-        Spacer(modifier = Modifier.height(dimensionResource(R.dimen.padding_small)))
-
-        Row(
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(text = "Repeat list when finished")
-            Spacer(modifier = Modifier.width(dimensionResource(R.dimen.padding_large)))
-            Switch(
-                checked = isCheckedRepeat,
-                onCheckedChange = { newValue ->
-                    setCheckedRepeat(newValue)
-                    if (newValue) {
-                        prefs.setRepeat(true)
-                    } else {
-                        prefs.setRepeat(false)
-                    }
+                Row() {
+                    Text(text = "Selected skin:")
+                    Spacer(modifier = Modifier.width(dimensionResource(R.dimen.padding_small)))
+                    Text(text = prefs.getSkin())
                 }
-            )
-        }
+
+                Spacer(modifier = Modifier.height(dimensionResource(R.dimen.padding_small)))
+
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(text = "Repeat list when finished")
+                    Spacer(modifier = Modifier.width(dimensionResource(R.dimen.padding_large)))
+                    Switch(
+                        checked = isCheckedRepeat,
+                        onCheckedChange = { newValue ->
+                            setCheckedRepeat(newValue)
+                            if (newValue) {
+                                prefs.setRepeat(true)
+                            } else {
+                                prefs.setRepeat(false)
+                            }
+                        }
+                    )
+                }
 
 
-        Spacer(modifier = Modifier.height(dimensionResource(R.dimen.padding_medium)))
-        
-        Button(onClick = navigateBack) {
-            Text(text = "Back")
+                Spacer(modifier = Modifier.height(dimensionResource(R.dimen.padding_medium)))
+
+                Button(onClick = navigateBack) {
+                    Text(text = "Back")
+                }
+            }
         }
     }
+
+
 }
 
 @Composable
