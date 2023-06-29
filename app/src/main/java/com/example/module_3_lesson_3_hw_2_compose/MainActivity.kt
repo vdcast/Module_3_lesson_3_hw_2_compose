@@ -2,9 +2,13 @@ package com.example.module_3_lesson_3_hw_2_compose
 
 import android.content.Intent
 import android.graphics.drawable.Icon
+import android.net.Uri
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -153,7 +157,6 @@ fun ScreenMain(
     navigateToSettings: () -> Unit
 ) {
     val context = LocalContext.current
-    val prefs = LocalPrefs.current
 
     Box(
         modifier = Modifier
@@ -231,6 +234,15 @@ fun ScreenPlayer(
                 Text(text = stringResource(id = R.string.player))
                 Spacer(modifier = Modifier.height(dimensionResource(R.dimen.padding_medium)))
 
+                FilePicker { uri ->
+                    Log.d("MYLOG", "Selected file $uri")
+                }
+
+                Button(onClick = { /*TODO*/ }) {
+                    Text(text = "Add music 2")
+                }
+
+                Spacer(modifier = Modifier.height(dimensionResource(R.dimen.padding_medium)))
                 Row() {
                     Image(
                         painter = painterResource(id = R.drawable.baseline_skip_previous_40),
@@ -253,6 +265,7 @@ fun ScreenPlayer(
                         contentDescription = "Icon next"
                     )
                 }
+                Spacer(modifier = Modifier.height(dimensionResource(R.dimen.padding_small)))
                 Row() {
                     Image(
                         painter = painterResource(id = R.drawable.baseline_volume_down_40),
@@ -271,8 +284,24 @@ fun ScreenPlayer(
             }
         }
     }
+}
 
-
+@Composable
+fun FilePicker(onFilePicked: (Uri) -> Unit) {
+    val context = LocalContext.current
+    val launcher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument(),
+        onResult = { uri: Uri? ->
+            uri?.let { onFilePicked(it) }
+        }
+    )
+    Button(
+        onClick = {
+            launcher.launch(arrayOf("audio/*"))
+        }
+    ) {
+        Text(text = "Add music")
+    }
 }
 
 @Composable
