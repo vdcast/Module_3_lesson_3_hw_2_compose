@@ -27,6 +27,8 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -43,6 +45,9 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.draw.paint
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.sp
@@ -54,28 +59,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             Module_3_Lesson_3_hw_2_ComposeTheme {
 
-                val navController = rememberNavController()
-
-                NavHost(
-                    navController = navController,
-                    startDestination = ScreenRoutes.ScreenMain.route
-                ) {
-                    composable(ScreenRoutes.ScreenMain.route) {
-                        ScreenMain(
-                            navigateToSettings = {
-                                navController.navigate(ScreenRoutes.ScreenSettings.route)
-                            }
-                        )
-                    }
-                    composable(ScreenRoutes.ScreenSettings.route) {
-                        ScreenSettings(
-                            navigateBack = {
-                                navController.popBackStack()
-                            }
-                        )
-                    }
-
-                }
+                MyApp()
 
 
             }
@@ -84,14 +68,60 @@ class MainActivity : ComponentActivity() {
 }
 
 
+val LocalPrefs = compositionLocalOf<SharedPrefs> { error(" No SharedPrefs provided") }
+
+@Composable
+fun MyApp() {
+    val prefs = SharedPrefs(LocalContext.current)
+    CompositionLocalProvider(LocalPrefs provides prefs) {
+        val navController = rememberNavController()
+
+        NavHost(
+            navController = navController,
+            startDestination = ScreenRoutes.ScreenMain.route
+        ) {
+            composable(ScreenRoutes.ScreenMain.route) {
+                ScreenMain(
+                    navigateToSettings = {
+                        navController.navigate(ScreenRoutes.ScreenSettings.route)
+                    }
+                )
+            }
+            composable(ScreenRoutes.ScreenSettings.route) {
+                ScreenSettings(
+                    navigateBack = {
+                        navController.popBackStack()
+                    }
+                )
+            }
+
+        }
+    }
+}
+
 @Composable
 fun ScreenMain(
     navigateToSettings: () -> Unit
 ) {
     val context = LocalContext.current
+    val prefs = LocalPrefs.current
 
     Column(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier
+            .fillMaxSize()
+            .paint(
+                painterResource(
+                    id = when (prefs.getSkin()) {
+                        "Light" -> R.drawable.light
+                        "Dark" -> R.drawable.dark_red_laser
+                        "Ocean" -> R.drawable.ocean
+                        "Moto" -> R.drawable.motocross
+                        "Nature" -> R.drawable.nature
+                        else -> R.drawable.light
+                    }
+                ),
+                contentScale = ContentScale.FillBounds
+            ),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
@@ -126,13 +156,27 @@ fun ScreenMain(
 fun ScreenSettings(
     navigateBack: () -> Unit
 ) {
-    val prefs = SharedPrefs(LocalContext.current)
+    val prefs = LocalPrefs.current
     val skins = listOf("Light", "Dark", "Ocean", "Moto", "Nature")
     var selectedSkin by rememberSaveable() { mutableStateOf(prefs.getSkin()) }
     val (isCheckedRepeat, setCheckedRepeat) = remember { mutableStateOf(prefs.getRepeat()) }
 
     Column(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier
+            .fillMaxSize()
+            .paint(
+                painterResource(
+                    id = when (prefs.getSkin()) {
+                        "Light" -> R.drawable.light
+                        "Dark" -> R.drawable.dark_red_laser
+                        "Ocean" -> R.drawable.ocean
+                        "Moto" -> R.drawable.motocross
+                        "Nature" -> R.drawable.nature
+                        else -> R.drawable.light
+                    }
+                ),
+                contentScale = ContentScale.FillBounds
+            ),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
