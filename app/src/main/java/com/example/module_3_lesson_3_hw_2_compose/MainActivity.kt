@@ -61,6 +61,7 @@ import androidx.compose.ui.unit.sp
 import com.example.module_3_lesson_3_hw_2_compose.ui.theme.Mint10
 import java.time.format.TextStyle
 import androidx.compose.foundation.Image
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.runtime.collectAsState
 
 class MainActivity : ComponentActivity() {
@@ -115,6 +116,9 @@ fun MyApp() {
             ) {
                 composable(ScreenRoutes.ScreenMain.route) {
                     ScreenMain(
+                        navigateToPlayer = {
+                            navController.navigate(ScreenRoutes.ScreenPlayer.route)
+                        },
                         navigateToSettings = {
                             navController.navigate(ScreenRoutes.ScreenSettings.route)
                         }
@@ -122,6 +126,13 @@ fun MyApp() {
                 }
                 composable(ScreenRoutes.ScreenSettings.route) {
                     ScreenSettings(
+                        navigateBack = {
+                            navController.popBackStack()
+                        }
+                    )
+                }
+                composable(ScreenRoutes.ScreenPlayer.route) {
+                    ScreenPlayer(
                         navigateBack = {
                             navController.popBackStack()
                         }
@@ -137,6 +148,7 @@ fun MyApp() {
 
 @Composable
 fun ScreenMain(
+    navigateToPlayer: () -> Unit,
     navigateToSettings: () -> Unit
 ) {
     val context = LocalContext.current
@@ -179,6 +191,9 @@ fun ScreenMain(
                 ) {
                     Text(text = stringResource(id = R.string.stopService))
                 }
+                Button(onClick = navigateToPlayer) {
+                    Text(text = stringResource(id = R.string.player))
+                }
                 Spacer(modifier = Modifier.height(dimensionResource(R.dimen.padding_small)))
                 Button(onClick = navigateToSettings) {
                     Text(text = stringResource(id = R.string.settings))
@@ -186,6 +201,48 @@ fun ScreenMain(
             }
         }
     }
+
+}
+
+
+@Composable
+fun ScreenPlayer(
+    navigateBack: () -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+
+        Card(
+            modifier = Modifier,
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(Mint10)
+        ) {
+            Column(
+                modifier = Modifier
+                    .wrapContentSize()
+                    .padding(all = 16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                Text(text = stringResource(id = R.string.player))
+
+                Row() {
+
+                    Icons.Default.PlayArrow
+                    Icons.Default.PlayArrow
+                }
+
+                Spacer(modifier = Modifier.height(dimensionResource(R.dimen.padding_medium)))
+                Button(onClick = navigateBack) {
+                    Text(text = "Back")
+                }
+            }
+        }
+    }
+
 
 }
 
@@ -225,7 +282,7 @@ fun ScreenSettings(
                 Row(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(text = "Choose skin of main screen")
+                    Text(text = "Choose background skin:")
                     Spacer(modifier = Modifier.width(dimensionResource(R.dimen.padding_medium)))
                     Spinner(
                         modifier = Modifier.width(dimensionResource(id = R.dimen.button_width)),
