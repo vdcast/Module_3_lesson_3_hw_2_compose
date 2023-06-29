@@ -1,9 +1,12 @@
 package com.example.module_3_lesson_3_hw_2_compose
 
+import android.content.Context
 import android.content.Intent
+import android.database.Cursor
 import android.graphics.drawable.Icon
 import android.net.Uri
 import android.os.Bundle
+import android.provider.OpenableColumns
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -65,6 +68,7 @@ import androidx.compose.ui.unit.sp
 import com.example.module_3_lesson_3_hw_2_compose.ui.theme.Mint10
 import java.time.format.TextStyle
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -213,6 +217,8 @@ fun ScreenMain(
 fun ScreenPlayer(
     navigateBack: () -> Unit
 ) {
+    val fileList = remember { mutableStateOf(listOf<String>()) }
+
     Box(
         modifier = Modifier
             .fillMaxSize(),
@@ -234,13 +240,17 @@ fun ScreenPlayer(
                 Text(text = stringResource(id = R.string.player))
                 Spacer(modifier = Modifier.height(dimensionResource(R.dimen.padding_medium)))
 
-                FilePicker { uri ->
-                    Log.d("MYLOG", "Selected file $uri")
+                FilePicker { uri, fileName ->
+                    Log.d("MYLOG", "Selected file $fileName and uri: $uri")
+                    fileList.value = fileList.value + fileName
                 }
 
-                Button(onClick = { /*TODO*/ }) {
-                    Text(text = "Add music 2")
+                LazyColumn {
+                    items(fileList.value.size) { index ->
+                        Text(text = fileList.value[index])
+                    }
                 }
+
 
                 Spacer(modifier = Modifier.height(dimensionResource(R.dimen.padding_medium)))
                 Row() {
@@ -286,23 +296,6 @@ fun ScreenPlayer(
     }
 }
 
-@Composable
-fun FilePicker(onFilePicked: (Uri) -> Unit) {
-    val context = LocalContext.current
-    val launcher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.OpenDocument(),
-        onResult = { uri: Uri? ->
-            uri?.let { onFilePicked(it) }
-        }
-    )
-    Button(
-        onClick = {
-            launcher.launch(arrayOf("audio/*"))
-        }
-    ) {
-        Text(text = "Add music")
-    }
-}
 
 @Composable
 fun ScreenSettings(
@@ -438,5 +431,68 @@ fun Spinner(
             }
         }
     }
-
 }
+
+
+@Composable
+fun FilePicker(onFilePicked: (Uri, String) -> Unit) {
+    val context = LocalContext.current
+    val launcher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument(),
+        onResult = { uri: Uri? ->
+            uri?.let {
+                var result: String? = null
+                if (uri.scheme.equals("content")) {
+                    val cursor = context.contentResolver.query(uri, null, null, null, null)
+                    cursor?.use {
+                        if (it.moveToFirst()) {
+                            val index = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+                            if (index != -1) {
+                                result = cursor.getString(index)
+                            }
+                        }
+                    }
+                }
+
+                result?.let { fileName ->
+                    val cut = fileName.lastIndexOf('/')
+                    if (cut != -1) {
+                        result = fileName.substring(cut + 1)
+                    }
+                    onFilePicked(uri, result ?: "")
+                }
+            }
+        }
+    )
+    Button(
+        onClick = {
+            launcher.launch(arrayOf("audio/*"))
+        }
+    ) {
+        Text(text = "Add music")
+    }
+}
+
+//@Composable
+//fun getFileName(context: Context, uri: Uri): String {
+//    var result: String? = null
+//    if (uri.scheme == "content") {
+//        val cursor: Cursor? = context.contentResolver.query(uri, null, null, null)
+//        try {
+//            if (cursor != null && cursor.moveToFirst()) {
+//                val index = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+//                if (index != -1) {
+//                    result = cursor.getString(index)
+//                }
+//            }
+//        } finally {
+//            cursor?.close()
+//        }
+//    }
+//    if (result == null) {
+//        result = uri.path
+//        val cut = result?.let {
+//            if (cut != -1)
+//        }
+//    }
+//}
