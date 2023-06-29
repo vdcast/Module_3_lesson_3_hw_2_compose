@@ -63,6 +63,7 @@ import java.time.format.TextStyle
 import androidx.compose.foundation.Image
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.runtime.collectAsState
+import androidx.compose.ui.graphics.vector.ImageVector
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -228,11 +229,39 @@ fun ScreenPlayer(
                 verticalArrangement = Arrangement.Center
             ) {
                 Text(text = stringResource(id = R.string.player))
+                Spacer(modifier = Modifier.height(dimensionResource(R.dimen.padding_medium)))
 
                 Row() {
-
-                    Icons.Default.PlayArrow
-                    Icons.Default.PlayArrow
+                    Image(
+                        painter = painterResource(id = R.drawable.baseline_skip_previous_40),
+                        contentDescription = "Icon previous"
+                    )
+                    Image(
+                        painter = painterResource(id = R.drawable.baseline_play_circle_40),
+                        contentDescription = "Icon play"
+                    )
+                    Image(
+                        painter = painterResource(id = R.drawable.baseline_pause_circle_40),
+                        contentDescription = "Icon pause"
+                    )
+                    Image(
+                        painter = painterResource(id = R.drawable.baseline_stop_circle_40),
+                        contentDescription = "Icon stop"
+                    )
+                    Image(
+                        painter = painterResource(id = R.drawable.baseline_skip_next_40),
+                        contentDescription = "Icon next"
+                    )
+                }
+                Row() {
+                    Image(
+                        painter = painterResource(id = R.drawable.baseline_volume_down_40),
+                        contentDescription = "Icon volume down"
+                    )
+                    Image(
+                        painter = painterResource(id = R.drawable.baseline_volume_up_40),
+                        contentDescription = "Icon volume up"
+                    )
                 }
 
                 Spacer(modifier = Modifier.height(dimensionResource(R.dimen.padding_medium)))
