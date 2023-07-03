@@ -4,8 +4,11 @@ import android.content.Context
 import android.content.Intent
 import android.database.Cursor
 import android.graphics.drawable.Icon
+import android.media.AudioManager
+import android.media.MediaPlayer
 import android.net.Uri
 import android.os.Bundle
+import android.provider.MediaStore.Audio
 import android.provider.OpenableColumns
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -68,10 +71,13 @@ import androidx.compose.ui.unit.sp
 import com.example.module_3_lesson_3_hw_2_compose.ui.theme.Mint10
 import java.time.format.TextStyle
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.graphics.vector.ImageVector
+import com.example.module_3_lesson_3_hw_2_compose.ui.theme.FileData
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -217,7 +223,17 @@ fun ScreenMain(
 fun ScreenPlayer(
     navigateBack: () -> Unit
 ) {
-    val fileList = remember { mutableStateOf(listOf<String>()) }
+    val context = LocalContext.current
+    val audioManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+    val fileList = remember { mutableStateOf(listOf<FileData>()) }
+    val mediaPlayer = remember { MediaPlayer() }
+    val currentIndex = remember { mutableStateOf(0) }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            mediaPlayer.release()
+        }
+    }
 
     Box(
         modifier = Modifier
@@ -242,12 +258,31 @@ fun ScreenPlayer(
 
                 FilePicker { uri, fileName ->
                     Log.d("MYLOG", "Selected file $fileName and uri: $uri")
-                    fileList.value = fileList.value + fileName
+                    fileList.value = fileList.value + FileData(fileName, uri)
                 }
+
+                Spacer(modifier = Modifier.height(dimensionResource(R.dimen.padding_small)))
 
                 LazyColumn {
                     items(fileList.value.size) { index ->
-                        Text(text = fileList.value[index])
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Image(
+                                painter = painterResource(id = R.drawable.baseline_play_circle_24),
+                                contentDescription = "Icon play from list",
+                                modifier = Modifier
+                                    .padding(horizontal = 8.dp, vertical = 4.dp)
+                                    .clickable {
+                                        val fileData = fileList.value[index]
+                                        mediaPlayer.reset()
+                                        mediaPlayer.setDataSource(context, fileData.uri)
+                                        mediaPlayer.prepare()
+                                        mediaPlayer.start()
+                                    }
+                            )
+                            Text(text = fileList.value[index].name)
+                        }
                     }
                 }
 
@@ -256,34 +291,74 @@ fun ScreenPlayer(
                 Row() {
                     Image(
                         painter = painterResource(id = R.drawable.baseline_skip_previous_40),
-                        contentDescription = "Icon previous"
+                        contentDescription = "Icon previous",
+                        modifier = Modifier.clickable {
+                            if (currentIndex.value > 0) {
+                                currentIndex.value--
+                                mediaPlayer.reset()
+                                mediaPlayer.setDataSource(context, fileList.value[currentIndex.value].uri)
+                                mediaPlayer.prepare()
+                                mediaPlayer.start()
+                            }
+                        }
                     )
                     Image(
                         painter = painterResource(id = R.drawable.baseline_play_circle_40),
-                        contentDescription = "Icon play"
+                        contentDescription = "Icon play",
+                        modifier = Modifier.clickable {
+                            if (!mediaPlayer.isPlaying) {
+                                mediaPlayer.start()
+                            }
+                        }
                     )
                     Image(
                         painter = painterResource(id = R.drawable.baseline_pause_circle_40),
-                        contentDescription = "Icon pause"
+                        contentDescription = "Icon pause",
+                        modifier = Modifier.clickable {
+                            if (mediaPlayer.isPlaying) {
+                                mediaPlayer.pause()
+                            }
+                        }
                     )
                     Image(
                         painter = painterResource(id = R.drawable.baseline_stop_circle_40),
-                        contentDescription = "Icon stop"
+                        contentDescription = "Icon stop",
+                        modifier = Modifier.clickable {
+                            if (mediaPlayer.isPlaying) {
+                                mediaPlayer.stop()
+                                mediaPlayer.prepare()
+                            }
+                        }
                     )
                     Image(
                         painter = painterResource(id = R.drawable.baseline_skip_next_40),
-                        contentDescription = "Icon next"
+                        contentDescription = "Icon next",
+                        modifier = Modifier.clickable {
+                            if (currentIndex.value < fileList.value.size - 1) {
+                                currentIndex.value++
+                                mediaPlayer.reset()
+                                mediaPlayer.setDataSource(context, fileList.value[currentIndex.value].uri)
+                                mediaPlayer.prepare()
+                                mediaPlayer.start()
+                            }
+                        }
                     )
                 }
                 Spacer(modifier = Modifier.height(dimensionResource(R.dimen.padding_small)))
                 Row() {
                     Image(
                         painter = painterResource(id = R.drawable.baseline_volume_down_40),
-                        contentDescription = "Icon volume down"
+                        contentDescription = "Icon volume down",
+                        modifier = Modifier.clickable {
+                            audioManager.adjustVolume(AudioManager.ADJUST_LOWER, AudioManager.FLAG_PLAY_SOUND)
+                        }
                     )
                     Image(
                         painter = painterResource(id = R.drawable.baseline_volume_up_40),
-                        contentDescription = "Icon volume up"
+                        contentDescription = "Icon volume up",
+                        modifier = Modifier.clickable {
+                            audioManager.adjustVolume(AudioManager.ADJUST_RAISE, AudioManager.FLAG_PLAY_SOUND)
+                        }
                     )
                 }
 
@@ -472,27 +547,3 @@ fun FilePicker(onFilePicked: (Uri, String) -> Unit) {
         Text(text = "Add music")
     }
 }
-
-//@Composable
-//fun getFileName(context: Context, uri: Uri): String {
-//    var result: String? = null
-//    if (uri.scheme == "content") {
-//        val cursor: Cursor? = context.contentResolver.query(uri, null, null, null)
-//        try {
-//            if (cursor != null && cursor.moveToFirst()) {
-//                val index = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
-//                if (index != -1) {
-//                    result = cursor.getString(index)
-//                }
-//            }
-//        } finally {
-//            cursor?.close()
-//        }
-//    }
-//    if (result == null) {
-//        result = uri.path
-//        val cut = result?.let {
-//            if (cut != -1)
-//        }
-//    }
-//}
