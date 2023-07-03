@@ -191,9 +191,16 @@ fun ScreenMain(
                     fontSize = 20.sp
                 )
                 Spacer(modifier = Modifier.height(dimensionResource(R.dimen.padding_medium)))
+                Button(onClick = navigateToPlayer) {
+                    Text(text = stringResource(id = R.string.player))
+                }
+                Spacer(modifier = Modifier.height(dimensionResource(R.dimen.padding_small)))
                 Button(
                     onClick = {
-                        context.startService(Intent(context, AudioService::class.java))
+                        val intent = Intent(context, AudioService::class.java)
+                        val myUri = Uri.parse("content://com.android.providers.downloads.documents/document/raw%3A%2Fstorage%2Femulated%2F0%2FDownload%2FGorillaz%20-%20Empire%20Ants.mp3")
+                        intent.putExtra("audio_uri", myUri)
+                        context.startService(intent)
                     }
                 ) {
                     Text(text = stringResource(id = R.string.startService))
@@ -204,9 +211,6 @@ fun ScreenMain(
                     }
                 ) {
                     Text(text = stringResource(id = R.string.stopService))
-                }
-                Button(onClick = navigateToPlayer) {
-                    Text(text = stringResource(id = R.string.player))
                 }
                 Spacer(modifier = Modifier.height(dimensionResource(R.dimen.padding_small)))
                 Button(onClick = navigateToSettings) {
@@ -253,7 +257,10 @@ fun ScreenPlayer(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
-                Text(text = stringResource(id = R.string.player))
+                Text(
+                    text = stringResource(id = R.string.player),
+                    fontSize = 20.sp
+                )
                 Spacer(modifier = Modifier.height(dimensionResource(R.dimen.padding_medium)))
 
                 FilePicker { uri, fileName ->
